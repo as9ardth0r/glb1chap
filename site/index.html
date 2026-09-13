@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>glb1chap — candidats chaperons GLB1</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #8a90a0;
+    --accent: #5eb1ff;
+    --good: #4caf7d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0 0 4px 0; font-size: 1.4rem; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  main { padding: 24px 32px; }
+  #controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  select, input {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .card .svg-wrap {
+    background: #fff;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    padding: 4px;
+  }
+  .card .svg-wrap svg { max-width: 100%; height: auto; }
+  .card h3 {
+    margin: 10px 0 4px 0;
+    font-size: 0.95rem;
+    word-break: break-all;
+  }
+  .card .r-group {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: rgba(94,177,255,0.12);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .stats b { color: var(--text); }
+  .fitness-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--good);
+    margin-top: 8px;
+  }
+  #empty { color: var(--muted); padding: 40px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>glb1chap — chaperons pharmacologiques candidats pour GLB1</h1>
+  <p id="meta">Chargement…</p>
+</header>
+<main>
+  <div id="controls">
+    <label>Trier par
+      <select id="sort-by">
+        <option value="fitness">fitness</option>
+        <option value="docking_score">score de docking</option>
+        <option value="qed">QED</option>
+        <option value="mw">masse molaire</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="novel-only"> nouveauté confirmée uniquement</label>
+  </div>
+  <div id="grid"></div>
+  <div id="empty" style="display:none">
+    Aucune donnée trouvée. Lance <code>python scripts/run_pipeline.py</code> à la racine
+    du dépôt pour générer <code>site/data/molecules.json</code>, puis sers ce dossier
+    (ex. <code>python -m http.server</code> depuis <code>site/</code>) — l'ouverture directe
+    du fichier <code>index.html</code> via <code>file://</code> bloque le chargement du JSON
+    dans la plupart des navigateurs.
+  </div>
+</main>
+<script src="js/app.js"></script>
+</body>
+</html>

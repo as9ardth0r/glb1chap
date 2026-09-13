@@ -1,0 +1,5 @@
+rdkit>=2023.9
+requests>=2.31
+# Optionnel — nécessaire uniquement pour scripts/prepare_receptor.py et le docking (--dock) :
+# meeko>=0.5
+# vina>=1.2.5
