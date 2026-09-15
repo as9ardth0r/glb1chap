@@ -15,6 +15,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: daily-run
@@ -23,6 +25,9 @@ concurrency:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,3 +58,17 @@ jobs:
           git add data/hall_of_fame.json data/explored.json site/data/molecules.json site/data/conformers.json
           git diff --cached --quiet || git commit -m "Run quotidien $(date -u +%Y-%m-%d) — nouveaux candidats GLB1"
           git push
+
+      # Déploiement fait ICI directement, dans le même job : un push
+      # effectué avec le GITHUB_TOKEN par défaut (ci-dessus) ne déclenche
+      # jamais d'autre workflow sur GitHub Actions (protection anti-boucle
+      # infinie) — deploy.yml ne se lancerait donc jamais tout seul après
+      # ce commit. On ne dépend donc pas d'un déclenchement croisé.
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
