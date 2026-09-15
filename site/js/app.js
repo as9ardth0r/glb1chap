@@ -1,3 +1,48 @@
+let conformersCache = null; // chargé une seule fois, à la demande (premier clic "Voir en 3D")
+const viewers = {}; // id molécule -> instance $3Dmol.GLViewer déjà créée
+
+async function getConformers() {
+  if (conformersCache) return conformersCache;
+  try {
+    const res = await fetch("data/conformers.json");
+    conformersCache = res.ok ? await res.json() : {};
+  } catch (err) {
+    conformersCache = {};
+  }
+  return conformersCache;
+}
+
+async function toggle3D(molId, container, button) {
+  const isVisible = container.style.display === "block";
+  if (isVisible) {
+    container.style.display = "none";
+    button.textContent = "Voir en 3D";
+    return;
+  }
+
+  const conformers = await getConformers();
+  const sdf = conformers[molId];
+  container.style.display = "block";
+  button.textContent = "Masquer la 3D";
+
+  if (!sdf) {
+    container.innerHTML = "<em style='color:#8a90a0;font-size:0.8rem;padding:8px;display:block'>Conformère 3D indisponible pour cette molécule.</em>";
+    return;
+  }
+
+  if (!viewers[molId]) {
+    container.innerHTML = "";
+    const viewer = $3Dmol.createViewer(container, { backgroundColor: "black" });
+    viewer.addModel(sdf, "sdf");
+    viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.25 } });
+    viewer.zoomTo();
+    viewer.render();
+    viewers[molId] = viewer;
+  } else {
+    viewers[molId].resize();
+  }
+}
+
 async function main() {
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty");
@@ -43,7 +88,8 @@ async function main() {
 
     grid.innerHTML = "";
     if (molecules.length === 0) {
-      empty.style.display = "block";
+      empty.style.display = "none";
+      grid.innerHTML = "<p style='color:#8a90a0'>Aucun candidat ne correspond au filtre.</p>";
       return;
     }
     empty.style.display = "none";
@@ -53,6 +99,8 @@ async function main() {
       card.className = "card";
 
       const rGroup = m.recipe ? m.recipe.r_group : "?";
+      const parentTag = m.recipe && m.recipe.parent_id
+        ? ` <span title="Muté à partir de ${m.recipe.parent_id}">🧬</span>` : "";
       const dockingText = m.docking_score !== null && m.docking_score !== undefined
         ? `${m.docking_score} kcal/mol` : "non docké";
       const noveltyText = m.is_novel === true ? "nouveau"
@@ -61,7 +109,7 @@ async function main() {
 
       card.innerHTML = `
         <div class="svg-wrap">${m.svg || "<em>pas de dépiction</em>"}</div>
-        <span class="r-group">N-${rGroup}</span>
+        <span class="r-group">N-${rGroup}${parentTag}</span>
         <h3>${m.id}</h3>
         <div class="stats">
           <div>MW: <b>${m.mw}</b></div>
@@ -72,7 +120,14 @@ async function main() {
           <div>Nouveauté: <b>${noveltyText}</b></div>
         </div>
         <div class="fitness-bar" style="width:${Math.round((m.fitness || 0) * 100)}%"></div>
+        <button class="btn-3d">Voir en 3D</button>
+        <div class="viewer-3d"></div>
       `;
+
+      const button = card.querySelector(".btn-3d");
+      const viewerDiv = card.querySelector(".viewer-3d");
+      button.addEventListener("click", () => toggle3D(m.id, viewerDiv, button));
+
       grid.appendChild(card);
     }
   }

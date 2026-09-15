@@ -50,3 +50,10 @@ def export_pdb(mol: Chem.Mol, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     Chem.MolToPDBFile(mol, str(path))
+
+
+def mol_to_sdf_block(mol: Chem.Mol) -> str:
+    """Sérialise un conformère 3D en bloc SDF (chaîne, pas de fichier) —
+    format consommé directement par les visualiseurs 3D côté navigateur
+    (dont 3Dmol.js)."""
+    return Chem.MolToMolBlock(mol) + "\n$$$$\n"

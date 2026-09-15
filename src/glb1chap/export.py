@@ -43,6 +43,21 @@ def build_site_payload(records: list[MoleculeRecord], target: str = "GLB1") -> d
     }
 
 
+def build_conformers_payload(records: list[MoleculeRecord]) -> dict:
+    """Construit le fichier séparé site/data/conformers.json : un bloc SDF
+    3D par molécule du hall of fame, chargé à la demande par le dashboard
+    (bouton "Voir en 3D") plutôt qu'embarqué dans molecules.json — évite
+    de gonfler le payload principal avec des données consultées rarement."""
+    from .docking_prep import embed_3d, mol_to_sdf_block
+
+    conformers: dict[str, str] = {}
+    for r in records:
+        mol = embed_3d(r.canonical_smiles, mol_id=r.id)
+        if mol is not None:
+            conformers[r.id] = mol_to_sdf_block(mol)
+    return conformers
+
+
 def write_json(payload: dict, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

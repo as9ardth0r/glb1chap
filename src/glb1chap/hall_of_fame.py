@@ -22,6 +22,20 @@ HALL_OF_FAME_MAX = 100  # catalogue de R-groups volontairement petit (~20) :
                           # espace combinatoire ouvert.
 
 
+def elite_parents(hall: list[MoleculeRecord], n: int = 5) -> list[MoleculeRecord]:
+    """Retourne les `n` meilleures molécules du hall of fame issues du
+    scaffold DGJ, à utiliser comme parents pour la mutation atomique
+    (`generator.mutate_fragment`). Ignore les molécules sans `recipe`
+    exploitable (ne devrait pas arriver pour ce pipeline, mais on ne
+    veut pas planter dessus)."""
+    candidates = [
+        r for r in hall
+        if r.recipe and r.recipe.get("r_group_smiles") and r.fitness is not None
+    ]
+    candidates.sort(key=lambda r: r.fitness, reverse=True)
+    return candidates[:n]
+
+
 def fitness(record: MoleculeRecord) -> float:
     """Score composite simple : favorise le docking (si disponible), sinon
     retombe sur le QED — le docking étant l'évaluation la plus pertinente

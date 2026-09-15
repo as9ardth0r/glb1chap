@@ -3,6 +3,7 @@ name: Deploy dashboard to GitHub Pages
 on:
   push:
     branches: [main]
+    paths: ["site/**"]
   workflow_dispatch: {}
 
 permissions:
@@ -15,23 +16,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Installer les dépendances
-        run: pip install -r requirements.txt
-
-      - name: Régénérer le dashboard (site/data/molecules.json)
-        run: python scripts/run_pipeline.py
 
       - uses: actions/configure-pages@v5
 

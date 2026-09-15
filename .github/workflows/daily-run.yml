@@ -1,0 +1,55 @@
+name: Run quotidien du pipeline GLB1
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # 03:00 UTC chaque jour
+  workflow_dispatch:
+    inputs:
+      n_mutants:
+        description: "Nombre de mutants à générer"
+        default: "30"
+      check_novelty:
+        description: "Vérifier la nouveauté sur PubChem"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-run
+  cancel-in-progress: false
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Lancer le pipeline (catalogue épuisable + mutation ouverte)
+        run: |
+          python scripts/run_pipeline.py \
+            --n-mutants "${{ github.event.inputs.n_mutants || '30' }}" \
+            ${{ (github.event.inputs.check_novelty != 'false') && '--check-novelty' || '' }}
+        # Le docking (--dock) est volontairement omis du run automatique :
+        # il nécessite AutoDock Vina + Meeko + le récepteur GLB1 déjà
+        # préparé (scripts/prepare_receptor.py, à lancer une fois
+        # manuellement puis committer data/receptor/GLB1/ si on veut
+        # l'activer ici aussi).
+
+      - name: Committer les nouveaux candidats
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/hall_of_fame.json data/explored.json site/data/molecules.json site/data/conformers.json
+          git diff --cached --quiet || git commit -m "Run quotidien $(date -u +%Y-%m-%d) — nouveaux candidats GLB1"
+          git push
