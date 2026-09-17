@@ -1,43 +1,64 @@
 # glb1chap
 
-> **Génération et criblage in silico de chaperons pharmacologiques candidats pour GLB1 (bêta-galactosidase lysosomale)**
+> **In silico generation and screening of candidate pharmacological chaperones for GLB1 (lysosomal beta-galactosidase)**
 
-Pipeline open source explorant des dérivés N-substitués du DGJ (1-désoxygalactonojirimycine), un iminosucre déjà connu comme inhibiteur/chaperon de galactosidases et co-cristallisé avec la bêta-galactosidase humaine (PDB [3THD](https://www.rcsb.org/structure/3THD)). L'objectif est d'identifier des candidats respectant un profil cible (TPP) adapté aux chaperons pharmacologiques, dans une optique de recherche sur la gangliosidose GM1 et la maladie de Morquio B — deux maladies de surcharge lysosomale causées par un déficit en GLB1.
+Open-source pipeline exploring N-substituted derivatives of DGJ
+(1-deoxygalactonojirimycin), an iminosugar already known as a
+galactosidase inhibitor/chaperone and co-crystallized with human
+beta-galactosidase (PDB [3THD](https://www.rcsb.org/structure/3THD)).
+The goal is to identify candidates meeting a target product profile
+(TPP) suited to pharmacological chaperones, in the context of research
+on GM1 gangliosidosis and Morquio B disease — two lysosomal storage
+disorders caused by GLB1 deficiency.
 
-L'approche s'inspire directement de celle validée cliniquement pour la Fabry (migalastat, chaperon de l'alpha-galactosidase A/GLA) : une petite molécule polaire portant une amine basique protonable, capable de se fixer dans le site actif d'une enzyme mutante instable et de la stabiliser suffisamment pour restaurer son trafic vers le lysosome.
+The approach directly mirrors the one clinically validated for Fabry
+disease (migalastat, a chaperone for alpha-galactosidase A/GLA): a
+small polar molecule carrying a protonatable basic amine, able to bind
+the active site of an unstable mutant enzyme and stabilize it enough
+to restore its trafficking to the lysosome.
 
-**Génération en deux temps, indéfiniment renouvelable :**
-1. **Catalogue** (`generator.R_GROUPS`, ~40 substituants) — fini, épuisé après le premier run complet.
-2. **Mutation atomique** (`generator.mutate_fragment`) — une fois le catalogue épuisé, le pipeline mute le fragment R des meilleurs candidats du hall of fame (ajout/retrait/permutation d'un halogène, ajout/retrait d'un méthyle). Cette mutation opère **toujours sur le fragment isolé, jamais sur la molécule assemblée** : le noyau polyhydroxylé du DGJ (le pharmacophore reconnu par le site actif) ne peut structurellement jamais être touché, même après des centaines de générations. C'est ce mécanisme qui permet au pipeline de tourner indéfiniment (voir `.github/workflows/daily-run.yml`, exécution quotidienne automatique).
+**Two-stage generation, indefinitely renewable:**
+1. **Catalog** (`generator.R_GROUPS`, ~40 substituents) — finite,
+   exhausted after the first complete run.
+2. **Atomic mutation** (`generator.mutate_fragment`) — once the catalog
+   is exhausted, the pipeline mutates the R fragment of the best
+   candidates from the hall of fame (adding/removing/permuting a
+   halogen, adding/removing a methyl group). This mutation always
+   operates **on the isolated fragment, never on the assembled
+   molecule**: the DGJ's polyhydroxylated core (the pharmacophore
+   recognized by the active site) can structurally never be touched,
+   even after hundreds of generations. This mechanism is what lets the
+   pipeline run indefinitely (see `.github/workflows/daily-run.yml`,
+   an automatic daily run).
 
 ---
 
-## Structure du dépôt
+## Repository structure
 
 ```text
 glb1chap/
 ├── src/glb1chap/
-│   ├── properties.py      # Chargement SMILES + calcul MW/LogP/TPSA/HBD/HBA/QED
-│   ├── filters.py         # TPP chaperon (amine basique requise, plages MW/LogP/TPSA...), PAINS & Brenk
-│   ├── generator.py       # Catalogue de R-groups + mutation atomique du fragment (espace ouvert)
-│   ├── evolve.py          # Combine catalogue et mutation pour produire les candidats d'un run
-│   ├── receptor_prep.py   # Repérage/extraction du ligand co-cristallisé (DGJ) dans un PDB brut
-│   ├── docking_prep.py    # Conformères 3D (ETKDGv3 + MMFF94) + export SDF pour le viewer 3D
-│   ├── docking.py         # Docking contre GLB1 (PDBQT, AutoDock Vina)
-│   ├── novelty.py         # Vérification PubChem (InChIKey exact)
-│   ├── hall_of_fame.py    # Persistance + sélection des parents pour la mutation
-│   └── export.py          # Génère site/data/molecules.json et conformers.json
+│   ├── properties.py      # SMILES loading + MW/LogP/TPSA/HBD/HBA/QED calculation
+│   ├── filters.py         # Chaperone TPP (required basic amine, MW/LogP/TPSA ranges...), PAINS & Brenk
+│   ├── generator.py       # R-group catalog + atomic fragment mutation (open-ended space)
+│   ├── evolve.py          # Combines catalog and mutation to produce a run's candidates
+│   ├── receptor_prep.py   # Locating/extracting the co-crystallized ligand (DGJ) from a raw PDB
+│   ├── docking_prep.py    # 3D conformers (ETKDGv3 + MMFF94) + SDF export for the 3D viewer
+│   ├── docking.py         # Docking against GLB1 (PDBQT, AutoDock Vina)
+│   ├── novelty.py         # PubChem check (exact InChIKey)
+│   ├── hall_of_fame.py    # Persistence + parent selection for mutation
+│   └── export.py          # Generates site/data/molecules.json and conformers.json
 ├── scripts/
-│   ├── prepare_receptor.py # Télécharge et prépare 3THD pour le docking
-│   └── run_pipeline.py     # Orchestration complète (voir ci-dessous)
-├── site/                   # Dashboard statique (structures 2D + viewer 3D par molécule)
+│   ├── prepare_receptor.py # Downloads and prepares 3THD for docking
+│   └── run_pipeline.py     # Full orchestration (see below)
+├── site/                   # Static dashboard (2D structures + 3D viewer per molecule)
 ├── data/
-│   ├── hall_of_fame.json   # Meilleurs candidats conformes au TPP (sert aussi de pool de parents)
-│   ├── explored.json       # SMILES canoniques déjà testés, tous mécanismes confondus
-│   └── receptor/GLB1/      # Récepteur préparé (PDBQT + boîte Vina), après prepare_receptor.py
+│   ├── hall_of_fame.json   # Best TPP-compliant candidates (also the parent pool for mutation)
+│   ├── explored.json       # Canonical SMILES already tested, across all mechanisms
+│   └── receptor/GLB1/      # Prepared receptor (PDBQT + Vina box), after prepare_receptor.py
 ├── .github/workflows/
-│   ├── daily-run.yml       # Run quotidien automatique (cron) : génère + commite les résultats
-│   └── deploy.yml          # Publie site/ sur GitHub Pages à chaque changement committé
+│   ├── daily-run.yml       # Automatic daily run (cron): generates + commits results
+│   └── deploy.yml          # Publishes site/ to GitHub Pages on every committed change
 ├── tests/
 └── requirements.txt
 ```
@@ -47,33 +68,56 @@ glb1chap/
 ```bash
 pip install -r requirements.txt
 
-# 1. Préparer le récepteur (nécessite un accès réseau à files.rcsb.org) — une seule fois
+# 1. Prepare the receptor (requires network access to files.rcsb.org) — one time only
 python scripts/prepare_receptor.py
 
-# 2. Lancer le pipeline
+# 2. Run the pipeline
 python scripts/run_pipeline.py --dock --check-novelty --n-mutants 30
 ```
 
-`--n-mutants` contrôle combien de candidats sont produits par mutation à chaque run (0 pour ne tester que le reliquat du catalogue). Une fois le catalogue épuisé, c'est cette mutation qui alimente le pipeline indéfiniment.
+`--n-mutants` controls how many candidates are produced by mutation on
+each run (0 to only test the catalog's remainder). Once the catalog is
+exhausted, this mutation is what feeds the pipeline indefinitely.
 
-## Automatisation
+## Automation
 
-- **`daily-run.yml`** tourne chaque nuit (cron `0 3 * * *`), exécute `run_pipeline.py --check-novelty` (le docking est omis par défaut du run automatique — voir commentaire dans le workflow), et commite `data/*.json` + `site/data/*.json` s'il y a du nouveau.
-- **`deploy.yml`** se déclenche à chaque push touchant `site/` et republie le dashboard sur GitHub Pages — il ne régénère rien lui-même, il publie l'état déjà committé par `daily-run.yml` (ou par un run manuel).
-- Activer : Settings → Pages → Source → *GitHub Actions*, sur le dépôt GitHub.
+- **`daily-run.yml`** runs every night (cron `0 3 * * *`), executes
+  `run_pipeline.py --check-novelty` (docking is skipped by default in
+  the automated run — see the comment in the workflow), and commits
+  `data/*.json` + `site/data/*.json` if there's anything new.
+- **`deploy.yml`** triggers on every push touching `site/` and
+  republishes the dashboard to GitHub Pages — it doesn't regenerate
+  anything itself, it publishes the state already committed by
+  `daily-run.yml` (or a manual run).
+- To enable: Settings → Pages → Source → *GitHub Actions*, on the
+  GitHub repository.
 
 ## Dashboard
 
-Cartes triables (fitness / score de docking / QED / MW), filtre "nouveauté confirmée", et un bouton **Voir en 3D** par molécule qui charge à la demande `site/data/conformers.json` et affiche le conformère via [3Dmol.js](https://3dmol.csb.pitt.edu/). L'icône 🧬 sur une carte indique une molécule issue de la mutation (avec son parent en info-bulle) plutôt que du catalogue de départ.
+Sortable cards (fitness / docking score / QED / MW), a "confirmed
+novelty" filter, and a **View in 3D** button per molecule that loads
+`site/data/conformers.json` on demand and displays the conformer via
+[3Dmol.js](https://3dmol.csb.pitt.edu/). The 🧬 icon on a card
+indicates a molecule produced by mutation (with its parent shown in a
+tooltip) rather than from the starting catalog.
 
 ```bash
-cd site && python -m http.server 8000   # puis ouvrir http://localhost:8000
+cd site && python -m http.server 8000   # then open http://localhost:8000
 ```
-(l'ouverture directe de `index.html` en `file://` bloque le `fetch` des JSON dans la plupart des navigateurs)
+(opening `index.html` directly via `file://` blocks the JSON `fetch`
+calls in most browsers)
 
-## Limites connues
+## Known limitations
 
-- Le SA score est une heuristique simplifiée (pas le SA score officiel RDKit Contrib d'Ertl & Schuffenhauer).
-- Le docking (`--dock`) nécessite AutoDock Vina, Meeko et le récepteur déjà préparé ; sans ces prérequis, `docking_score` reste `None` et le tri se fait sur le QED. Non activé dans le run quotidien automatique par défaut.
-- La mutation atomique est volontairement simple (halogènes + méthyles) — elle ne fait ni cyclisation, ni changement de squelette, ni réarrangement.
-- Plusieurs analogues du catalogue (ex. N-butyl-DGJ) sont déjà des composés connus/publiés — `--check-novelty` le signale via `is_novel=False`, ce qui est une information utile, pas un échec du pipeline.
+- The SA score is a simplified heuristic (not the official RDKit
+  Contrib SA score by Ertl & Schuffenhauer).
+- Docking (`--dock`) requires AutoDock Vina, Meeko, and an already-
+  prepared receptor; without these prerequisites, `docking_score`
+  stays `None` and sorting falls back to QED. Not enabled in the
+  automated daily run by default.
+- Atomic mutation is deliberately simple (halogens + methyls) — no
+  ring formation, no scaffold change, no rearrangement.
+- Several catalog analogs (e.g. N-butyl-DGJ) are already known/
+  published compounds — `--check-novelty` flags this via
+  `is_novel=False`, which is useful information, not a pipeline
+  failure.
