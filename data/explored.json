@@ -78,6 +78,7 @@
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2c(Cl)cccc12",
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2c(F)cccc12",
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2cc(Br)ccc12",
+  "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2cc(Cl)ccc12",
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2cc(F)ccc12",
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2ccc(Br)cc12",
   "Cc1cc(C(C)N2C[C@H](O)[C@@H](O)[C@@H](O)[C@H]2CO)cc2ccc(Cl)cc12",
