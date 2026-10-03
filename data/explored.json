@@ -136,6 +136,7 @@
   "Cc1cc2ccccc2cc1C(C)(F)N1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
   "Cc1cc2ccccc2cc1C(C)N1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
   "Cc1cc2ccccc2cc1C(CBr)N1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
+  "Cc1cc2ccccc2cc1C(CCl)N1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
   "Cc1cc2ccccc2cc1C(CF)N1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
   "Cc1cc2ccccc2cc1CN1C[C@H](O)[C@@H](O)[C@@H](O)[C@H]1CO",
   "Cc1ccc(Br)c2cc(C(C)N3C[C@H](O)[C@@H](O)[C@@H](O)[C@H]3CO)ccc12",
